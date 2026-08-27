@@ -1,0 +1,41 @@
+# Recommended starting values for a public, ~6-15 player Bedrock server.
+# scripts/setup.ps1 copies this over server/server.properties on first run
+# only — it will NOT overwrite your live config on later runs/updates.
+# Full field reference: https://learn.microsoft.com/minecraft/creator/documents/bedrockdedicatedserversoftware
+# (verify against that page directly; this file is a starting point, not gospel)
+
+server-name=My KLG Server
+gamemode=survival
+force-gamemode=false
+difficulty=normal
+allow-cheats=false
+max-players=15
+online-mode=true
+allow-list=false
+server-port=19132
+server-portv6=19133
+view-distance=10
+tick-distance=4
+player-idle-timeout=30
+max-threads=8
+level-name=Bedrock level
+level-seed=
+default-player-permission-level=member
+texturepack-required=false
+content-log-file-enabled=false
+compression-threshold=1
+compression-algorithm=zlib
+server-authoritative-movement=server-auth
+player-movement-score-threshold=20
+player-movement-action-direction-threshold=0.85
+player-movement-distance-threshold=0.3
+player-movement-duration-threshold-in-ms=500
+correct-player-movement=false
+server-authoritative-block-breaking=false
+chat-restriction=None
+disable-player-interaction=false
+client-side-chunk-generation-enabled=true
+block-network-ids-are-hashes=true
+disable-persona=false
+disable-custom-skins=false
+server-build-radius-ratio=Disabled

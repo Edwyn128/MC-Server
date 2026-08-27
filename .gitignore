@@ -1,0 +1,12 @@
+# Bedrock Dedicated Server binaries and runtime data are downloaded fresh by
+# scripts/setup.ps1 and must not be committed (Mojang/Microsoft EULA, and
+# they're large binaries that don't belong in git history).
+/server/
+*.zip
+
+# Runtime data if it ends up outside /server/ for any reason
+/worlds/
+*.log
+
+# Local overrides
+config/server.properties.local

@@ -1,0 +1,17 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "Example Starter Kit",
+    "description": "Minimal example behavior pack: adds a /function starterkit command. Use this as a template for your own add-ons.",
+    "uuid": "7a020c17-f48d-4d6c-8d94-a1191755742f",
+    "version": [1, 0, 0],
+    "min_engine_version": [1, 21, 0]
+  },
+  "modules": [
+    {
+      "type": "data",
+      "uuid": "e8f8f109-8a88-48ad-a08f-4758efb31fce",
+      "version": [1, 0, 0]
+    }
+  ]
+}
