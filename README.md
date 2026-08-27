@@ -33,7 +33,8 @@ for the values this repo starts you with.
 | `scripts/setup.ps1` | Downloads/installs BDS into `server/`, preserves your world+config on re-run (use it to update versions too) |
 | `scripts/start.ps1` | Launches `server/bedrock_server.exe` |
 | `scripts/open-firewall.ps1` | Opens inbound UDP 19132/19133 in Windows Firewall |
-| `scripts/install-pack.ps1` | Copies a behavior/resource pack into the server |
+| `scripts/activate-pack.ps1` | One command to install *and* activate a behavior/resource pack for your world |
+| `scripts/install-pack.ps1` | Just copies a pack into the server, without activating it (used internally / for manual control) |
 | `config/server.properties.template` | Starting server config, seeded on first setup only |
 | `addons/` | Add-on (mod) packs, with a minimal example pack and install instructions |
 | `NETWORKING.md` | Port forwarding, dynamic DNS, and connection instructions for public play |
@@ -48,8 +49,11 @@ optional dynamic DNS. That part happens on your router, not from this repo.
 ## Adding mods (Add-Ons)
 
 See **[addons/README.md](addons/README.md)**. Short version: unzip a
-`.mcpack`/`.mcaddon`, run `scripts/install-pack.ps1`, then list its UUID in
-the world's `world_behavior_packs.json`/`world_resource_packs.json`.
+`.mcpack`/`.mcaddon`, then run:
+```powershell
+.\scripts\activate-pack.ps1 -PackPath <folder> -Type behavior
+```
+It copies the pack in and activates it for your world in one step.
 
 ## Updating the server version
 
