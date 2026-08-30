@@ -34,7 +34,8 @@ for the values this repo starts you with.
 | `scripts/start.ps1` | Launches `server/bedrock_server.exe` |
 | `scripts/open-firewall.ps1` | Opens inbound UDP 19132/19133 in Windows Firewall |
 | `scripts/import-world.ps1` | Imports a `.mcworld` file (e.g. exported from a Realm) and points the server at it |
-| `scripts/activate-pack.ps1` | One command to install *and* activate a behavior/resource pack for your world |
+| `scripts/install-addons.ps1` | Scans a folder (default: Downloads) for `.mcpack`/`.mcaddon` files and installs+activates everything found in one pass |
+| `scripts/activate-pack.ps1` | Install *and* activate a single already-unzipped behavior/resource pack for your world |
 | `scripts/install-pack.ps1` | Just copies a pack into the server, without activating it (used internally / for manual control) |
 | `config/server.properties.template` | Starting server config, seeded on first setup only |
 | `addons/` | Add-on (mod) packs, with a minimal example pack and install instructions |
