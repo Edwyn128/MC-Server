@@ -33,6 +33,7 @@ for the values this repo starts you with.
 | `scripts/setup.ps1` | Downloads/installs BDS into `server/`, preserves your world+config on re-run (use it to update versions too) |
 | `scripts/start.ps1` | Launches `server/bedrock_server.exe` |
 | `scripts/open-firewall.ps1` | Opens inbound UDP 19132/19133 in Windows Firewall |
+| `scripts/import-world.ps1` | Imports a `.mcworld` file (e.g. exported from a Realm) and points the server at it |
 | `scripts/activate-pack.ps1` | One command to install *and* activate a behavior/resource pack for your world |
 | `scripts/install-pack.ps1` | Just copies a pack into the server, without activating it (used internally / for manual control) |
 | `config/server.properties.template` | Starting server config, seeded on first setup only |
