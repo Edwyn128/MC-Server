@@ -195,7 +195,10 @@ foreach ($file in $packFiles) {
             try {
                 $packDir = $manifestFile.Directory
                 $manifest = Read-JsonPermissive $manifestFile.FullName
-                $moduleTypes = $manifest.modules | ForEach-Object { $_.type }
+                if ($null -eq $manifest) {
+                    throw "manifest.json parsed to nothing (empty or invalid file)"
+                }
+                $moduleTypes = @($manifest.modules) | ForEach-Object { $_.type }
 
                 if ($moduleTypes -contains "resources") {
                     $type = "resource"
@@ -211,7 +214,10 @@ foreach ($file in $packFiles) {
                 Copy-Item -Recurse -Force $packDir.FullName $dest
 
                 # Queue activation for the world (written once, after all packs are processed).
-                $entries = if ($type -eq "behavior") { $behaviorEntries } else { $resourceEntries }
+                if ($type -eq "behavior") { $entries = $behaviorEntries } else { $entries = $resourceEntries }
+                if ($null -eq $entries) {
+                    throw "internal error: activation list for type '$type' was not initialized"
+                }
                 $packId = $manifest.header.uuid
                 $version = @($manifest.header.version)
                 if (-not ($entries | Where-Object { $_.pack_id -eq $packId })) {
@@ -221,13 +227,15 @@ foreach ($file in $packFiles) {
                 $installed += "$($manifest.header.name) [$type] (from $($file.Name))"
                 Write-Host "  Installed + activated: $($manifest.header.name) [$type]" -ForegroundColor Green
             } catch {
-                Write-Warning "  Could not parse $($manifestFile.FullName): $_"
-                $failed += "$($manifestFile.Directory.Name) (from $($file.Name)): $_"
+                $lineNum = if ($_.InvocationInfo) { $_.InvocationInfo.ScriptLineNumber } else { "?" }
+                Write-Warning "  Could not parse $($manifestFile.FullName): $($_.Exception.Message) [script line $lineNum]"
+                $failed += "$($manifestFile.Directory.Name) (from $($file.Name)): $($_.Exception.Message) [line $lineNum]"
             }
         }
     } catch {
-        Write-Warning "Failed to process $($file.Name): $_"
-        $failed += "$($file.Name): $_"
+        $lineNum = if ($_.InvocationInfo) { $_.InvocationInfo.ScriptLineNumber } else { "?" }
+        Write-Warning "Failed to process $($file.Name): $($_.Exception.Message) [script line $lineNum]"
+        $failed += "$($file.Name): $($_.Exception.Message) [line $lineNum]"
     }
 }
 
