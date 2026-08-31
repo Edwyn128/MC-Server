@@ -76,6 +76,11 @@ if (Test-Path $serverDir) {
     }
 }
 
+# The BDS zip itself ships with its own default server.properties, so after
+# extraction the file will exist either way - track here, before that happens,
+# whether OUR properties actually survived from a real prior install.
+$hadPriorProps = Test-Path (Join-Path $backupDir "server.properties")
+
 Write-Host "Extracting..."
 Expand-Archive -Path $zipPath -DestinationPath $serverDir -Force
 Remove-Item $zipPath
@@ -88,9 +93,11 @@ if (Test-Path $backupDir) {
     Remove-Item -Recurse -Force $backupDir
 }
 
-# First-run only: seed server.properties from our template. Never overwrite a live config.
+# Seed server.properties from our template unless a real prior install's
+# config was just restored over it - never overwrite YOUR live config, but
+# always replace the stock BDS default that ships inside every zip.
 $liveProps = Join-Path $serverDir "server.properties"
-if (-not (Test-Path $liveProps) -or (Get-Item $liveProps).Length -eq 0) {
+if (-not $hadPriorProps) {
     Copy-Item $configTemplate $liveProps -Force
     Write-Host "Seeded server.properties from config\server.properties.template" -ForegroundColor Green
 } else {
