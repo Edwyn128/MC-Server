@@ -94,12 +94,8 @@ function Expand-NestedPacks([string]$dir) {
 # deeper, compounding with every pack until the file was unparseable
 # garbage BDS silently ignored (packs "installed" but never actually
 # activated - no force-download prompt, no visible effect in-game).
-function New-EntryList {
-    return [System.Collections.Generic.List[object]]::new()
-}
-
 function Read-ActivationEntries([string]$activationFile) {
-    $list = New-EntryList
+    $list = New-Object 'System.Collections.Generic.List[object]'
     if (Test-Path $activationFile) {
         try {
             $raw = Get-Content $activationFile -Raw
@@ -165,6 +161,12 @@ $behaviorActivationFile = Join-Path $worldPath "world_behavior_packs.json"
 $resourceActivationFile = Join-Path $worldPath "world_resource_packs.json"
 $behaviorEntries = Read-ActivationEntries $behaviorActivationFile
 $resourceEntries = Read-ActivationEntries $resourceActivationFile
+
+if ($null -eq $behaviorEntries -or $null -eq $resourceEntries) {
+    Write-Error "Internal error: activation lists failed to initialize (behavior=$($null -eq $behaviorEntries) resource=$($null -eq $resourceEntries)). PowerShell version: $($PSVersionTable.PSVersion)"
+    exit 1
+}
+Write-Host "Loaded existing activation entries: $($behaviorEntries.Count) behavior, $($resourceEntries.Count) resource." -ForegroundColor DarkGray
 
 $installed = @()
 $failed = @()

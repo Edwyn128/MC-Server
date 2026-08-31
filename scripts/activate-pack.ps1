@@ -76,7 +76,7 @@ $activationFile = Join-Path $worldPath ($(if ($Type -eq "behavior") { "world_beh
 # single-entry file can't collapse into a bare JSON object instead of a
 # one-element array - see install-addons.ps1's Read/Write-ActivationEntries
 # for the full story on why that corrupts the file for BDS.
-$entries = [System.Collections.Generic.List[object]]::new()
+$entries = New-Object 'System.Collections.Generic.List[object]'
 if (Test-Path $activationFile) {
     try {
         $raw = Get-Content $activationFile -Raw
