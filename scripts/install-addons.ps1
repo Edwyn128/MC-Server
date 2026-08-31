@@ -108,7 +108,13 @@ function Read-ActivationEntries([string]$activationFile) {
             Write-Warning "Existing $activationFile could not be parsed and will be rebuilt from scratch: $_"
         }
     }
-    return $list
+    # The leading comma prevents PowerShell from enumerating (unrolling) the
+    # list onto the output stream - a 0-item list unrolled emits nothing at
+    # all, so the caller would receive $null instead of an empty List. This
+    # was the actual root cause of "cannot call a method on a null-valued
+    # expression" on every pack: this function always returned $null for a
+    # fresh/empty world (or one with no packs activated yet).
+    return ,$list
 }
 
 function Write-ActivationEntries([string]$activationFile, $list) {
