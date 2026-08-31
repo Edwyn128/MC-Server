@@ -72,11 +72,21 @@ $version = @($manifest.header.version)
 
 $activationFile = Join-Path $worldPath ($(if ($Type -eq "behavior") { "world_behavior_packs.json" } else { "world_resource_packs.json" }))
 
-$entries = @()
+# Loaded into a List and written with -InputObject (not piped) so a
+# single-entry file can't collapse into a bare JSON object instead of a
+# one-element array - see install-addons.ps1's Read/Write-ActivationEntries
+# for the full story on why that corrupts the file for BDS.
+$entries = [System.Collections.Generic.List[object]]::new()
 if (Test-Path $activationFile) {
-    $raw = Get-Content $activationFile -Raw
-    if ($raw.Trim()) {
-        $entries = @(ConvertFrom-Json $raw)
+    try {
+        $raw = Get-Content $activationFile -Raw
+        if ($raw.Trim()) {
+            foreach ($item in @(ConvertFrom-Json $raw)) {
+                if ($item -and $item.pack_id) { $entries.Add($item) }
+            }
+        }
+    } catch {
+        Write-Warning "Existing $activationFile could not be parsed and will be rebuilt from scratch: $_"
     }
 }
 
@@ -84,8 +94,12 @@ $already = $entries | Where-Object { $_.pack_id -eq $packId }
 if ($already) {
     Write-Host "Pack already activated for world '$WorldName' (uuid $packId)." -ForegroundColor Yellow
 } else {
-    $entries += [PSCustomObject]@{ pack_id = $packId; version = $version }
-    ($entries | ConvertTo-Json -Depth 5) | Set-Content $activationFile
+    $entries.Add([PSCustomObject]@{ pack_id = $packId; version = $version })
+    $json = ConvertTo-Json -InputObject $entries -Depth 5
+    if ($entries.Count -eq 1 -and -not $json.TrimStart().StartsWith('[')) {
+        $json = "[$json]"
+    }
+    Set-Content $activationFile $json
     Write-Host "Activated '$packName' for world '$WorldName'." -ForegroundColor Green
 }
 

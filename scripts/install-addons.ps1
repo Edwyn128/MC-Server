@@ -85,6 +85,50 @@ function Expand-NestedPacks([string]$dir) {
     }
 }
 
+# Activation entries are collected in-memory (via .Add(), never `+=`) and
+# written to world_(behavior|resource)_packs.json exactly ONCE at the end.
+# Reading-modifying-writing that file once per pack, as an earlier version
+# of this script did, hit a PowerShell quirk where ConvertTo-Json collapses
+# a single-item collection into a bare object instead of a one-element JSON
+# array; the next read-and-append then nested that bare object one level
+# deeper, compounding with every pack until the file was unparseable
+# garbage BDS silently ignored (packs "installed" but never actually
+# activated - no force-download prompt, no visible effect in-game).
+function New-EntryList {
+    return [System.Collections.Generic.List[object]]::new()
+}
+
+function Read-ActivationEntries([string]$activationFile) {
+    $list = New-EntryList
+    if (Test-Path $activationFile) {
+        try {
+            $raw = Get-Content $activationFile -Raw
+            if ($raw.Trim()) {
+                foreach ($item in @(ConvertFrom-Json $raw)) {
+                    if ($item -and $item.pack_id) { $list.Add($item) }
+                }
+            }
+        } catch {
+            Write-Warning "Existing $activationFile could not be parsed and will be rebuilt from scratch: $_"
+        }
+    }
+    return $list
+}
+
+function Write-ActivationEntries([string]$activationFile, $list) {
+    if ($list.Count -eq 0) {
+        Set-Content $activationFile "[]"
+        return
+    }
+    $json = ConvertTo-Json -InputObject $list -Depth 5
+    # A single-element collection piped through ConvertTo-Json emits a bare
+    # object ({...}) instead of a one-element array ([{...}]) - force it.
+    if ($list.Count -eq 1 -and -not $json.TrimStart().StartsWith('[')) {
+        $json = "[$json]"
+    }
+    Set-Content $activationFile $json
+}
+
 if (-not (Test-Path $serverDir)) {
     Write-Error "server\ not found. Run .\scripts\setup.ps1 first."
     exit 1
@@ -116,6 +160,11 @@ if (-not $packFiles) {
 
 $workDir = Join-Path $env:TEMP "mcserver-addons-$(Get-Random)"
 New-Item -ItemType Directory -Force -Path $workDir | Out-Null
+
+$behaviorActivationFile = Join-Path $worldPath "world_behavior_packs.json"
+$resourceActivationFile = Join-Path $worldPath "world_resource_packs.json"
+$behaviorEntries = Read-ActivationEntries $behaviorActivationFile
+$resourceEntries = Read-ActivationEntries $resourceActivationFile
 
 $installed = @()
 $failed = @()
@@ -161,18 +210,12 @@ foreach ($file in $packFiles) {
                 $dest = Join-Path $destRoot $packName
                 Copy-Item -Recurse -Force $packDir.FullName $dest
 
-                # Activate for the world.
-                $activationFile = Join-Path $worldPath ($(if ($type -eq "behavior") { "world_behavior_packs.json" } else { "world_resource_packs.json" }))
-                $entries = @()
-                if (Test-Path $activationFile) {
-                    $raw = Get-Content $activationFile -Raw
-                    if ($raw.Trim()) { $entries = @(ConvertFrom-Json $raw) }
-                }
+                # Queue activation for the world (written once, after all packs are processed).
+                $entries = if ($type -eq "behavior") { $behaviorEntries } else { $resourceEntries }
                 $packId = $manifest.header.uuid
                 $version = @($manifest.header.version)
                 if (-not ($entries | Where-Object { $_.pack_id -eq $packId })) {
-                    $entries += [PSCustomObject]@{ pack_id = $packId; version = $version }
-                    ($entries | ConvertTo-Json -Depth 5) | Set-Content $activationFile
+                    $entries.Add([PSCustomObject]@{ pack_id = $packId; version = $version })
                 }
 
                 $installed += "$($manifest.header.name) [$type] (from $($file.Name))"
@@ -187,6 +230,9 @@ foreach ($file in $packFiles) {
         $failed += "$($file.Name): $_"
     }
 }
+
+Write-ActivationEntries $behaviorActivationFile $behaviorEntries
+Write-ActivationEntries $resourceActivationFile $resourceEntries
 
 Remove-Item -Recurse -Force $workDir
 
