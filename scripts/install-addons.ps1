@@ -41,7 +41,9 @@ $serverDir = Join-Path $root "server"
 $worldsDir = Join-Path $serverDir "worlds"
 
 function Read-JsonPermissive([string]$path) {
-    $text = Get-Content $path -Raw
+    # Read as UTF-8 explicitly - Windows PowerShell's default Get-Content
+    # encoding guess mangles the Â§-style color codes some pack names use.
+    $text = [System.IO.File]::ReadAllText($path, [System.Text.Encoding]::UTF8)
     # Strip /* */ block comments.
     $text = [regex]::Replace($text, '(?s)/\*.*?\*/', '')
     # Strip // line comments that aren't inside a quoted string.
