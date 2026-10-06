@@ -10,3 +10,9 @@
 
 # Local overrides
 config/server.properties.local
+
+# Project Zomboid Dedicated Server + SteamCMD are downloaded fresh by
+# scripts/pz-setup.ps1 and must not be committed (large binaries, and
+# SteamCMD/game files don't belong in git history).
+/server-pz/
+/steamcmd/
